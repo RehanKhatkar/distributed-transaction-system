@@ -1,6 +1,7 @@
 package com.project.saga_orchestrator.kafka;
 
 import com.project.saga_orchestrator.model.OrderEvent;
+import com.project.saga_orchestrator.model.OrderStatus;
 import com.project.saga_orchestrator.model.SagaState;
 import com.project.saga_orchestrator.repo.SagaRepository;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -28,8 +29,8 @@ public class OrderEventConsumer {
         }
 
         System.out.println("Clean OrderId: " + orderId);
-        SagaState state = new SagaState(orderId, "CREATED");
+        SagaState state = new SagaState(orderId, OrderStatus.CREATED);
         sagaRepository.save(state);
-        sagaProducer.sendEventJson("payment-request", orderId, "PAYMENT_REQUEST");
+        sagaProducer.sendEventJson("payment-request", orderId, OrderStatus.PAYMENT_REQUEST);
     }
 }

@@ -11,5 +11,5 @@ import lombok.Setter;
 @AllArgsConstructor
 public class OrderEvent {
     private String orderId;
-    private String status;
+    private OrderStatus status;
 }

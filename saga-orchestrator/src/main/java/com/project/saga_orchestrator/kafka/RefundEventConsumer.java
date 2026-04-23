@@ -2,6 +2,7 @@ package com.project.saga_orchestrator.kafka;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.saga_orchestrator.model.OrderEvent;
+import com.project.saga_orchestrator.model.OrderStatus;
 import com.project.saga_orchestrator.model.SagaState;
 import com.project.saga_orchestrator.repo.SagaRepository;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -26,7 +27,7 @@ public class RefundEventConsumer {
         }
         SagaState state = sagaRepository.findById(orderId).orElse(null);
         if (state != null) {
-            state.setStatus("REFUNDED");
+            state.setStatus(OrderStatus.REFUNDED);
             sagaRepository.save(state);
         }
         System.out.println("Refund completed: " + orderId);

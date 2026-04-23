@@ -2,6 +2,7 @@ package com.project.payment_service.kafka;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.payment_service.model.OrderEvent;
+import com.project.payment_service.model.OrderStatus;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -14,7 +15,7 @@ public class PaymentProducer {
     }
     public void sendPaymentSuccess(String orderId) {
         try {
-            OrderEvent event = new OrderEvent(orderId, "PAYMENT_SUCCESS");
+            OrderEvent event = new OrderEvent(orderId, OrderStatus.PAYMENT_SUCCESS);
             String json = objectMapper.writeValueAsString(event);
             kafkaTemplate.send("payment-success", orderId, json); System.out.println("Sent: " + json);
         }
@@ -24,7 +25,7 @@ public class PaymentProducer {
     }
     public void sendPaymentFailed(String orderId) {
         try {
-            OrderEvent event = new OrderEvent(orderId, "PAYMENT_FAILED");
+            OrderEvent event = new OrderEvent(orderId, OrderStatus.PAYMENT_FAILED);
             String json = objectMapper.writeValueAsString(event);
             kafkaTemplate.send("payment-failed", orderId, json);
         }
@@ -34,7 +35,7 @@ public class PaymentProducer {
     }
     public void sendRefundSuccess(String orderId) {
         try {
-            OrderEvent event = new OrderEvent(orderId, "REFUND_SUCCESS");
+            OrderEvent event = new OrderEvent(orderId, OrderStatus.REFUND_SUCCESS);
             String json = objectMapper.writeValueAsString(event);
             kafkaTemplate.send("refund-success", orderId, json);
         }

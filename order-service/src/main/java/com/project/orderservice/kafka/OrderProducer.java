@@ -1,6 +1,7 @@
 package com.project.orderservice.kafka;
 
 import com.project.orderservice.model.OrderEvent;
+import com.project.orderservice.model.OrderStatus;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,7 +17,7 @@ public class OrderProducer {
 
     public void sendOrderCreated(String orderId) {
         try {
-            OrderEvent event = new OrderEvent(orderId, "CREATED");
+            OrderEvent event = new OrderEvent(orderId, OrderStatus.CREATED);
             String json = objectMapper.writeValueAsString(event);
             kafkaTemplate.send("order-created", orderId, json);
             System.out.println("Sent: " + json);

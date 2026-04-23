@@ -2,6 +2,7 @@ package com.project.saga_orchestrator.kafka;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.saga_orchestrator.model.OrderEvent;
+import com.project.saga_orchestrator.model.OrderStatus;
 import com.project.saga_orchestrator.model.SagaState;
 import com.project.saga_orchestrator.repo.SagaRepository;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -31,16 +32,16 @@ public class PaymentEventConsumer {
             if (state == null) {
                 throw new RuntimeException("Order not found");
             }
-            if ("PAYMENT_SUCCESS".equals(state.getStatus())) {
+            if (OrderStatus.PAYMENT_SUCCESS.equals(state.getStatus())) {
                 System.out.println("Duplicate ignored");
                 return;
             }
-            state.setStatus("PAYMENT_SUCCESS");
+            state.setStatus(OrderStatus.PAYMENT_SUCCESS);
             sagaRepository.save(state);
-            sagaProducer.sendEventJson("inventory-failed", orderId, "INVENTORY_FAILED");
+            sagaProducer.sendEventJson("inventory-failed", orderId, OrderStatus.INVENTORY_FAILED);
             System.out.println("Payment success processed for: " + orderId);
         } catch (Exception e) {
-            sagaProducer.sendEventJson("payment-success-dlq", orderId, "PAYMENT_SUCCESS_FAILED");
+            sagaProducer.sendEventJson("payment-success-dlq", orderId,OrderStatus.PAYMENT_SUCCESS_DLQ );
         }
     }
     @KafkaListener(topics = "payment-failed", groupId = "saga-group")
@@ -57,15 +58,15 @@ public class PaymentEventConsumer {
             if (state == null) {
                 throw new RuntimeException("Order not found");
             }
-            if ("PAYMENT_FAILED".equals(state.getStatus())) {
+            if (OrderStatus.PAYMENT_FAILED.equals(state.getStatus())) {
                 System.out.println("Duplicate ignored");
                 return;
             }
-            state.setStatus("PAYMENT_FAILED");
+            state.setStatus(OrderStatus.PAYMENT_FAILED);
             sagaRepository.save(state);
             System.out.println("Order cancelled: " + orderId);
         } catch (Exception e) {
-            sagaProducer.sendEventJson("payment-failed-dlq", orderId, "PAYMENT_FAILED_FAILED");
+            sagaProducer.sendEventJson("payment-failed-dlq", orderId, OrderStatus.PAYMENT_FAILED_DLQ);
         }
     }
 }

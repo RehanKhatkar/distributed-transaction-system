@@ -2,6 +2,7 @@ package com.project.saga_orchestrator.kafka;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.saga_orchestrator.model.OrderEvent;
+import com.project.saga_orchestrator.model.OrderStatus;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -15,7 +16,7 @@ public class SagaProducer {
         this.kafkaTemplate = kafkaTemplate;
         this.objectMapper = objectMapper;
     }
-    public void sendEventJson(String topic, String orderId, String status) {
+    public void sendEventJson(String topic, String orderId, OrderStatus status) {
         try {
             OrderEvent event = new OrderEvent(orderId, status);
             String json = objectMapper.writeValueAsString(event);

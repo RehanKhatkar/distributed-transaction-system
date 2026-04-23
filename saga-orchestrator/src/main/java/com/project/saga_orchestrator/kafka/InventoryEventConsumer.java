@@ -2,6 +2,7 @@ package com.project.saga_orchestrator.kafka;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.saga_orchestrator.model.OrderEvent;
+import com.project.saga_orchestrator.model.OrderStatus;
 import com.project.saga_orchestrator.model.SagaState;
 import com.project.saga_orchestrator.repo.SagaRepository;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -28,7 +29,7 @@ public class InventoryEventConsumer {
         }
         SagaState state = sagaRepository.findById(orderId).orElse(null);
         if (state != null) {
-            state.setStatus("COMPLETED");
+            state.setStatus(OrderStatus.COMPLETED);
             sagaRepository.save(state);
         }
         System.out.println("Order COMPLETED: " + orderId);
@@ -43,6 +44,6 @@ public class InventoryEventConsumer {
             orderId = message;
         }
         System.out.println("Inventory failed, triggering refund: " + orderId);
-        sagaProducer.sendEventJson("refund-request", orderId, "REFUND_REQUEST");
+        sagaProducer.sendEventJson("refund-request", orderId, OrderStatus.REFUND_REQUEST);
     }
 }

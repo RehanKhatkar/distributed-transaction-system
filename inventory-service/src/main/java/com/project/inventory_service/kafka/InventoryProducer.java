@@ -2,6 +2,7 @@ package com.project.inventory_service.kafka;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.inventory_service.model.OrderEvent;
+import com.project.inventory_service.model.OrderStatus;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -17,7 +18,7 @@ public class InventoryProducer {
 
     public void sendInventorySuccess(String orderId) {
         try {
-            OrderEvent event = new OrderEvent(orderId, "INVENTORY_SUCCESS");
+            OrderEvent event = new OrderEvent(orderId, OrderStatus.INVENTORY_SUCCESS);
             String json = objectMapper.writeValueAsString(event);
             kafkaTemplate.send("inventory-success", orderId, json);
         } catch (Exception e) {
@@ -26,7 +27,7 @@ public class InventoryProducer {
     }
     public void sendInventoryFailed(String orderId) {
         try {
-            OrderEvent event = new OrderEvent(orderId, "INVENTORY_FAILED");
+            OrderEvent event = new OrderEvent(orderId, OrderStatus.INVENTORY_FAILED);
             String json = objectMapper.writeValueAsString(event);
             kafkaTemplate.send("inventory-failed", orderId, json);
         } catch (Exception e) {

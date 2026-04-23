@@ -1,0 +1,17 @@
+package com.project.saga_orchestrator.model;
+
+public enum OrderStatus {
+    CREATED,
+    PAYMENT_REQUEST,
+    PAYMENT_SUCCESS,
+    PAYMENT_FAILED,
+    INVENTORY_REQUEST,
+    INVENTORY_SUCCESS,
+    INVENTORY_FAILED,
+    REFUND_REQUEST,
+    REFUND_SUCCESS,
+    COMPLETED,
+    REFUNDED,
+    PAYMENT_FAILED_DLQ,
+    PAYMENT_SUCCESS_DLQ
+}
