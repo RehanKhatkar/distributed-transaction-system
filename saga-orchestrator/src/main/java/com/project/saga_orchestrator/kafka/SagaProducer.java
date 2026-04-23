@@ -1,5 +1,7 @@
 package com.project.saga_orchestrator.kafka;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.project.saga_orchestrator.model.OrderEvent;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -7,13 +9,19 @@ import org.springframework.stereotype.Service;
 public class SagaProducer {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
+    private final ObjectMapper objectMapper;
 
-    public SagaProducer(KafkaTemplate<String, String> kafkaTemplate) {
+    public SagaProducer(KafkaTemplate<String, String> kafkaTemplate, ObjectMapper objectMapper) {
         this.kafkaTemplate = kafkaTemplate;
+        this.objectMapper = objectMapper;
     }
-
-    public void sendEvent(String topic, String message) {
-        kafkaTemplate.send(topic, message);
-        System.out.println("Sent event to " + topic + ": " + message);
+    public void sendEventJson(String topic, String orderId, String status) {
+        try {
+            OrderEvent event = new OrderEvent(orderId, status);
+            String json = objectMapper.writeValueAsString(event);
+            kafkaTemplate.send(topic, orderId, json);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

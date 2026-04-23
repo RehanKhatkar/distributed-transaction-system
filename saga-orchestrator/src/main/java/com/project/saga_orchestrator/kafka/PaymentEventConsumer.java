@@ -1,5 +1,7 @@
 package com.project.saga_orchestrator.kafka;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.project.saga_orchestrator.model.OrderEvent;
 import com.project.saga_orchestrator.model.SagaState;
 import com.project.saga_orchestrator.repo.SagaRepository;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -8,14 +10,24 @@ import org.springframework.stereotype.Service;
 public class PaymentEventConsumer {
     private final SagaRepository sagaRepository;
     private final SagaProducer sagaProducer;
-    public PaymentEventConsumer(SagaRepository sagaRepository, SagaProducer sagaProducer) {
+    private final ObjectMapper objectMapper;
+    public PaymentEventConsumer(SagaRepository sagaRepository, SagaProducer sagaProducer, ObjectMapper objectMapper) {
         this.sagaRepository = sagaRepository;
         this.sagaProducer = sagaProducer;
+        this.objectMapper = objectMapper;
     }
     @KafkaListener(topics = "payment-success", groupId = "saga-group")
     public void handleSuccess(String message) {
+        String orderId;
         try {
-            SagaState state = sagaRepository.findById(message).orElse(null);
+            OrderEvent event = objectMapper.readValue(message, OrderEvent.class);
+            orderId = event.getOrderId();
+        } catch (Exception e) {
+            orderId = message;
+        }
+
+        try {
+            SagaState state = sagaRepository.findById(orderId).orElse(null);
             if (state == null) {
                 throw new RuntimeException("Order not found");
             }
@@ -23,22 +35,25 @@ public class PaymentEventConsumer {
                 System.out.println("Duplicate ignored");
                 return;
             }
-            // simulate failure (for testing)
-            if (Math.random() < 0.3) {
-                throw new RuntimeException("Random failure");
-            }
             state.setStatus("PAYMENT_SUCCESS");
             sagaRepository.save(state);
-            sagaProducer.sendEvent("inventory-request", message);
+            sagaProducer.sendEventJson("inventory-failed", orderId, "INVENTORY_FAILED");
+            System.out.println("Payment success processed for: " + orderId);
         } catch (Exception e) {
-            System.out.println("Error occurred: " + e.getMessage());
-            sagaProducer.sendEvent("payment-success-dlq", message);
+            sagaProducer.sendEventJson("payment-success-dlq", orderId, "PAYMENT_SUCCESS_FAILED");
         }
     }
     @KafkaListener(topics = "payment-failed", groupId = "saga-group")
     public void handleFailure(String message) {
+        String orderId;
         try {
-            SagaState state = sagaRepository.findById(message).orElse(null);
+            OrderEvent event = objectMapper.readValue(message, OrderEvent.class);
+            orderId = event.getOrderId();
+        } catch (Exception e) {
+            orderId = message;
+        }
+        try {
+            SagaState state = sagaRepository.findById(orderId).orElse(null);
             if (state == null) {
                 throw new RuntimeException("Order not found");
             }
@@ -48,10 +63,9 @@ public class PaymentEventConsumer {
             }
             state.setStatus("PAYMENT_FAILED");
             sagaRepository.save(state);
-            System.out.println("Order cancelled");
+            System.out.println("Order cancelled: " + orderId);
         } catch (Exception e) {
-            System.out.println("Error occurred: " + e.getMessage());
-            sagaProducer.sendEvent("payment-failed-dlq", message);
+            sagaProducer.sendEventJson("payment-failed-dlq", orderId, "PAYMENT_FAILED_FAILED");
         }
     }
 }

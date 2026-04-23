@@ -1,5 +1,7 @@
 package com.project.inventory_service.kafka;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.project.inventory_service.model.OrderEvent;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -7,13 +9,28 @@ import org.springframework.stereotype.Service;
 public class InventoryProducer {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
-
-    public InventoryProducer(KafkaTemplate<String, String> kafkaTemplate) {
+    private final ObjectMapper objectMapper;
+    public InventoryProducer(KafkaTemplate<String, String> kafkaTemplate, ObjectMapper objectMapper) {
         this.kafkaTemplate = kafkaTemplate;
+        this.objectMapper = objectMapper;
     }
 
-    public void sendEvent(String topic, String message) {
-        kafkaTemplate.send(topic, message);
-        System.out.println("Sent: " + topic + " -> " + message);
+    public void sendInventorySuccess(String orderId) {
+        try {
+            OrderEvent event = new OrderEvent(orderId, "INVENTORY_SUCCESS");
+            String json = objectMapper.writeValueAsString(event);
+            kafkaTemplate.send("inventory-success", orderId, json);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    public void sendInventoryFailed(String orderId) {
+        try {
+            OrderEvent event = new OrderEvent(orderId, "INVENTORY_FAILED");
+            String json = objectMapper.writeValueAsString(event);
+            kafkaTemplate.send("inventory-failed", orderId, json);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

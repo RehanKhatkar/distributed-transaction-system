@@ -5,6 +5,8 @@ import com.project.orderservice.kafka.OrderProducer;
 import com.project.orderservice.repository.OrderRepository;
 import org.springframework.stereotype.Service;
 
+import java.sql.SQLOutput;
+
 @Service
 public class OrderService {
 
@@ -25,8 +27,8 @@ public class OrderService {
         Order savedOrder = orderRepository.save(order);
 
         // Send event to Kafka
-        orderProducer.sendOrderCreatedEvent("Order Created with ID: " + savedOrder.getId());
-
+        String orderId = String.valueOf(order.getId());
+        orderProducer.sendOrderCreated(orderId);
         return savedOrder;
     }
 }
