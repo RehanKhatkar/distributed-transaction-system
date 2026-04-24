@@ -6,11 +6,39 @@ It ensures data consistency across multiple services without using traditional d
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ Architecture (Event Flow)
 
-Order Service → Saga Orchestrator → Payment Service → Inventory Service → Refund Flow
+### Step 1: Order Creation
+Order Service → (order-created) → Saga Orchestrator
+
+### Step 2: Payment Processing
+Saga Orchestrator → (payment-request) → Payment Service  
+Payment Service → (payment-success / payment-failed) → Saga Orchestrator
+
+### Step 3: Inventory Handling
+Saga Orchestrator → (inventory-request) → Inventory Service  
+
+- If success:  
+  Inventory Service → (inventory-success) → Saga Orchestrator  
+  Saga Orchestrator → (order-completed) → Order Service  
+
+- If failure:  
+  Inventory Service → (inventory-failed) → Saga Orchestrator  
+  Saga Orchestrator → (refund-request) → Payment Service  
+  Payment Service → (refund-success) → Saga Orchestrator  
+  Saga Orchestrator → (order-refunded) → Order Service
 
 ---
+## 🔄 Event Topics Used
+- order-created
+- payment-request
+- payment-success / payment-failed
+- inventory-request
+- inventory-success / inventory-failed
+- refund-request
+- refund-success
+- order-completed
+- order-refunded
 
 ## 🔄 Flow
 
