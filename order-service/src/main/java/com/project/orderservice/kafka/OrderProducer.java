@@ -5,6 +5,8 @@ import com.project.orderservice.model.OrderStatus;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.UUID;
+
 @Service
 public class OrderProducer {
     private final KafkaTemplate<String, String> kafkaTemplate;
@@ -14,10 +16,10 @@ public class OrderProducer {
         this.kafkaTemplate = kafkaTemplate;
         this.objectMapper = objectMapper;
     }
-
     public void sendOrderCreated(String orderId) {
         try {
-            OrderEvent event = new OrderEvent(orderId, OrderStatus.CREATED);
+            String correlationId = UUID.randomUUID().toString();
+            OrderEvent event = new OrderEvent(orderId, OrderStatus.CREATED,correlationId);
             String json = objectMapper.writeValueAsString(event);
             kafkaTemplate.send("order-created", orderId, json);
             System.out.println("Sent: " + json);

@@ -1,5 +1,6 @@
 package com.project.saga_orchestrator.kafka;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.saga_orchestrator.model.OrderEvent;
 import com.project.saga_orchestrator.model.OrderStatus;
@@ -19,31 +20,23 @@ public class InventoryEventConsumer {
         this.objectMapper = objectMapper;
     }
     @KafkaListener(topics = "inventory-success", groupId = "saga-group")
-    public void handleSuccess(String message) {
-        String orderId;
-        try {
-            OrderEvent event = objectMapper.readValue(message, OrderEvent.class);
-            orderId = event.getOrderId();
-        } catch (Exception e) {
-            orderId = message;
-        }
+    public void handleSuccess(String message) throws JsonProcessingException {
+        OrderEvent event = objectMapper.readValue(message, OrderEvent.class);
+        String orderId = event.getOrderId();
+        String correlationId= event.getCorrelationId();
         SagaState state = sagaRepository.findById(orderId).orElse(null);
         if (state != null) {
             state.setStatus(OrderStatus.COMPLETED);
             sagaRepository.save(state);
         }
-        System.out.println("Order COMPLETED: " + orderId);
+        sagaProducer.sendEventJson("order-completed", orderId, OrderStatus.COMPLETED, correlationId);
     }
     @KafkaListener(topics = "inventory-failed", groupId = "saga-group")
-    public void handleFailure(String message) {
-        String orderId;
-        try {
-            OrderEvent event = objectMapper.readValue(message, OrderEvent.class);
-            orderId = event.getOrderId();
-        } catch (Exception e) {
-            orderId = message;
-        }
+    public void handleFailure(String message) throws JsonProcessingException {
+        OrderEvent event = objectMapper.readValue(message, OrderEvent.class);
+        String orderId = event.getOrderId();
+        String correlationId= event.getCorrelationId();
         System.out.println("Inventory failed, triggering refund: " + orderId);
-        sagaProducer.sendEventJson("refund-request", orderId, OrderStatus.REFUND_REQUEST);
+        sagaProducer.sendEventJson("refund-request", orderId, OrderStatus.REFUND_REQUEST,correlationId);
     }
 }

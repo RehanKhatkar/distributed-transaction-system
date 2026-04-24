@@ -1,5 +1,6 @@
 package com.project.saga_orchestrator.kafka;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.saga_orchestrator.model.OrderEvent;
 import com.project.saga_orchestrator.model.OrderStatus;
@@ -18,15 +19,10 @@ public class PaymentEventConsumer {
         this.objectMapper = objectMapper;
     }
     @KafkaListener(topics = "payment-success", groupId = "saga-group")
-    public void handleSuccess(String message) {
-        String orderId;
-        try {
-            OrderEvent event = objectMapper.readValue(message, OrderEvent.class);
-            orderId = event.getOrderId();
-        } catch (Exception e) {
-            orderId = message;
-        }
-
+    public void handleSuccess(String message) throws JsonProcessingException {
+        OrderEvent event = objectMapper.readValue(message, OrderEvent.class);
+        String orderId = event.getOrderId();
+        String correlationId= event.getCorrelationId();
         try {
             SagaState state = sagaRepository.findById(orderId).orElse(null);
             if (state == null) {
@@ -38,21 +34,17 @@ public class PaymentEventConsumer {
             }
             state.setStatus(OrderStatus.PAYMENT_SUCCESS);
             sagaRepository.save(state);
-            sagaProducer.sendEventJson("inventory-failed", orderId, OrderStatus.INVENTORY_FAILED);
+            sagaProducer.sendEventJson("inventory-request", orderId, OrderStatus.INVENTORY_REQUEST,correlationId);
             System.out.println("Payment success processed for: " + orderId);
         } catch (Exception e) {
-            sagaProducer.sendEventJson("payment-success-dlq", orderId,OrderStatus.PAYMENT_SUCCESS_DLQ );
+            sagaProducer.sendEventJson("payment-success-dlq", orderId,OrderStatus.PAYMENT_SUCCESS_DLQ,correlationId);
         }
     }
     @KafkaListener(topics = "payment-failed", groupId = "saga-group")
-    public void handleFailure(String message) {
-        String orderId;
-        try {
-            OrderEvent event = objectMapper.readValue(message, OrderEvent.class);
-            orderId = event.getOrderId();
-        } catch (Exception e) {
-            orderId = message;
-        }
+    public void handleFailure(String message) throws JsonProcessingException {
+        OrderEvent event = objectMapper.readValue(message, OrderEvent.class);
+        String orderId = event.getOrderId();
+        String correlationId= event.getCorrelationId();
         try {
             SagaState state = sagaRepository.findById(orderId).orElse(null);
             if (state == null) {
@@ -66,7 +58,7 @@ public class PaymentEventConsumer {
             sagaRepository.save(state);
             System.out.println("Order cancelled: " + orderId);
         } catch (Exception e) {
-            sagaProducer.sendEventJson("payment-failed-dlq", orderId, OrderStatus.PAYMENT_FAILED_DLQ);
+            sagaProducer.sendEventJson("payment-failed-dlq", orderId, OrderStatus.PAYMENT_FAILED_DLQ,correlationId);
         }
     }
 }

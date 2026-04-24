@@ -1,5 +1,6 @@
 package com.project.saga_orchestrator.kafka;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.project.saga_orchestrator.model.OrderEvent;
 import com.project.saga_orchestrator.model.OrderStatus;
 import com.project.saga_orchestrator.model.SagaState;
@@ -19,18 +20,13 @@ public class OrderEventConsumer {
         this.objectMapper = objectMapper;
     }
     @KafkaListener(topics = "order-created", groupId = "saga-group")
-    public void consume(String message) {
-        String orderId;
-        try {
-            OrderEvent event = objectMapper.readValue(message, OrderEvent.class);
-            orderId = event.getOrderId();
-        } catch (Exception e) {
-            orderId = message;
-        }
-
+    public void consume(String message) throws JsonProcessingException {
+        OrderEvent event = objectMapper.readValue(message, OrderEvent.class);
+        String orderId = event.getOrderId();
+        String correlationId= event.getCorrelationId();
         System.out.println("Clean OrderId: " + orderId);
         SagaState state = new SagaState(orderId, OrderStatus.CREATED);
         sagaRepository.save(state);
-        sagaProducer.sendEventJson("payment-request", orderId, OrderStatus.PAYMENT_REQUEST);
+        sagaProducer.sendEventJson("payment-request", orderId, OrderStatus.PAYMENT_REQUEST,correlationId);
     }
 }

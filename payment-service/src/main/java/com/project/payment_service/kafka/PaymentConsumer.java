@@ -1,5 +1,6 @@
 package com.project.payment_service.kafka;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.payment_service.model.OrderEvent;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -16,22 +17,17 @@ public class PaymentConsumer {
     }
 
     @KafkaListener(topics = "payment-request", groupId = "payment-group")
-    public void consume(String message) {
-        String orderId;
-        try {
-            OrderEvent event = objectMapper.readValue(message, OrderEvent.class);
-            orderId = event.getOrderId();
-        }
-        catch (Exception e) {
-            orderId = message;
-        }
+    public void consume(String message) throws JsonProcessingException {
+        OrderEvent event = objectMapper.readValue(message, OrderEvent.class);
+        String orderId = event.getOrderId();
+        String correlationId= event.getCorrelationId();
         System.out.println("Received payment request: " + message);
         // simulate payment processing
         boolean success = Math.random() > 0.2;
         if (success) {
-            paymentProducer.sendPaymentSuccess(orderId);
+            paymentProducer.sendPaymentSuccess(orderId,correlationId);
         } else {
-            paymentProducer.sendPaymentFailed(orderId);
+            paymentProducer.sendPaymentFailed(orderId,correlationId);
         }
     }
 }

@@ -13,34 +13,34 @@ public class PaymentProducer {
     public PaymentProducer(KafkaTemplate<String, String> kafkaTemplate, ObjectMapper objectMapper) {
         this.kafkaTemplate = kafkaTemplate; this.objectMapper = objectMapper;
     }
-    public void sendPaymentSuccess(String orderId) {
+    public void sendPaymentSuccess(String orderId,String correlationId) {
         try {
-            OrderEvent event = new OrderEvent(orderId, OrderStatus.PAYMENT_SUCCESS);
+            OrderEvent event = new OrderEvent(orderId, OrderStatus.PAYMENT_SUCCESS,correlationId);
             String json = objectMapper.writeValueAsString(event);
             kafkaTemplate.send("payment-success", orderId, json); System.out.println("Sent: " + json);
         }
         catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("Failed to send payment-success event for order: " + orderId);
         }
     }
-    public void sendPaymentFailed(String orderId) {
+    public void sendPaymentFailed(String orderId,String correlationId) {
         try {
-            OrderEvent event = new OrderEvent(orderId, OrderStatus.PAYMENT_FAILED);
+            OrderEvent event = new OrderEvent(orderId, OrderStatus.PAYMENT_FAILED,correlationId);
             String json = objectMapper.writeValueAsString(event);
             kafkaTemplate.send("payment-failed", orderId, json);
         }
         catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("Failed to send payment-failed event for order: " + orderId);
         }
     }
-    public void sendRefundSuccess(String orderId) {
+    public void sendRefundSuccess(String orderId,String correlationId) {
         try {
-            OrderEvent event = new OrderEvent(orderId, OrderStatus.REFUND_SUCCESS);
+            OrderEvent event = new OrderEvent(orderId, OrderStatus.REFUND_SUCCESS,correlationId);
             String json = objectMapper.writeValueAsString(event);
             kafkaTemplate.send("refund-success", orderId, json);
         }
         catch (Exception e) {
-            e.printStackTrace();
+            System.out.println("Failed to send refund-success event for order: " + orderId);
         }
     }
 }

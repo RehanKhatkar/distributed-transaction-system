@@ -2,6 +2,7 @@ package com.project.saga_orchestrator.model;
 
 public enum OrderStatus {
     CREATED,
+    PENDING,
     PAYMENT_REQUEST,
     PAYMENT_SUCCESS,
     PAYMENT_FAILED,

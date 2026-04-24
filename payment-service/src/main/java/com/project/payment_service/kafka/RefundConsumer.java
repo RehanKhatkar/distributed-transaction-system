@@ -1,5 +1,6 @@
 package com.project.payment_service.kafka;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.payment_service.model.OrderEvent;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -14,17 +15,12 @@ public class RefundConsumer {
         this.objectMapper = objectMapper;
     }
     @KafkaListener(topics = "refund-request", groupId = "payment-group")
-    public void consume(String message) {
-        String orderId;
-        try {
-            OrderEvent event = objectMapper.readValue(message, OrderEvent.class);
-            orderId = event.getOrderId();
-        }
-        catch (Exception e) {
-            orderId = message;
-        }
+    public void consume(String message) throws JsonProcessingException {
+        OrderEvent event = objectMapper.readValue(message, OrderEvent.class);
+        String orderId = event.getOrderId();
+        String correlationId = event.getCorrelationId();
         System.out.println("Processing refund for order: " + message);
         // simulate refund success
-        paymentProducer.sendRefundSuccess(orderId);
+        paymentProducer.sendRefundSuccess(orderId,correlationId);
     }
 }

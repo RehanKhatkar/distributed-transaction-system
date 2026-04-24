@@ -16,18 +16,18 @@ public class InventoryProducer {
         this.objectMapper = objectMapper;
     }
 
-    public void sendInventorySuccess(String orderId) {
+    public void sendInventorySuccess(String orderId,String correlationId) {
         try {
-            OrderEvent event = new OrderEvent(orderId, OrderStatus.INVENTORY_SUCCESS);
+            OrderEvent event = new OrderEvent(orderId, OrderStatus.INVENTORY_SUCCESS,correlationId);
             String json = objectMapper.writeValueAsString(event);
             kafkaTemplate.send("inventory-success", orderId, json);
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-    public void sendInventoryFailed(String orderId) {
+    public void sendInventoryFailed(String orderId,String correlationId) {
         try {
-            OrderEvent event = new OrderEvent(orderId, OrderStatus.INVENTORY_FAILED);
+            OrderEvent event = new OrderEvent(orderId, OrderStatus.INVENTORY_FAILED,correlationId);
             String json = objectMapper.writeValueAsString(event);
             kafkaTemplate.send("inventory-failed", orderId, json);
         } catch (Exception e) {

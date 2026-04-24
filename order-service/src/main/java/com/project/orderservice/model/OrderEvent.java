@@ -12,4 +12,5 @@ import lombok.Setter;
 public class OrderEvent {
     private String orderId;
     private OrderStatus status;
+    private String correlationId;
 }

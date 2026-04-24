@@ -16,9 +16,9 @@ public class SagaProducer {
         this.kafkaTemplate = kafkaTemplate;
         this.objectMapper = objectMapper;
     }
-    public void sendEventJson(String topic, String orderId, OrderStatus status) {
+    public void sendEventJson(String topic, String orderId, OrderStatus status, String correlationId) {
         try {
-            OrderEvent event = new OrderEvent(orderId, status);
+            OrderEvent event = new OrderEvent(orderId, status,correlationId);
             String json = objectMapper.writeValueAsString(event);
             kafkaTemplate.send(topic, orderId, json);
         } catch (Exception e) {

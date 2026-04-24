@@ -1,5 +1,6 @@
 package com.project.orderservice.entity;
 
+import com.project.orderservice.model.OrderStatus;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -16,5 +17,6 @@ public class Order {
     private Long id;
     private Long userId;
     private Long productId;
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private OrderStatus status;
 }

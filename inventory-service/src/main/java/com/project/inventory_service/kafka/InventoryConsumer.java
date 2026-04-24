@@ -1,5 +1,6 @@
 package com.project.inventory_service.kafka;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.inventory_service.model.OrderEvent;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -16,21 +17,16 @@ public class InventoryConsumer {
     }
 
     @KafkaListener(topics = "inventory-request", groupId = "inventory-group")
-    public void consume(String message) {
-        String orderId;
-        try {
-            OrderEvent event = objectMapper.readValue(message, OrderEvent.class);
-            orderId = event.getOrderId();
-        } catch (Exception e) {
-            orderId = message;
-        }
+    public void consume(String message) throws JsonProcessingException {
+        OrderEvent event = objectMapper.readValue(message, OrderEvent.class);
+        String orderId = event.getOrderId();
+        String correlationId= event.getCorrelationId();
         System.out.println("Processing inventory for: " + orderId);
-
         boolean inStock = Math.random() > 0.3;
         if (inStock) {
-            inventoryProducer.sendInventorySuccess(orderId);
+            inventoryProducer.sendInventorySuccess(orderId,correlationId);
         } else {
-            inventoryProducer.sendInventoryFailed(orderId);
+            inventoryProducer.sendInventoryFailed(orderId,correlationId);
         }
     }
 }

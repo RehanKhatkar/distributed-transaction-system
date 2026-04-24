@@ -1,21 +1,19 @@
 package com.project.orderservice.controller;
 
-import com.project.orderservice.entity.Order;
+import com.project.orderservice.DTO.OrderRequest;
 import com.project.orderservice.service.OrderService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/orders")
+@RequestMapping("/order")
 public class OrderController {
-
     private final OrderService orderService;
-
     public OrderController(OrderService orderService) {
         this.orderService = orderService;
     }
-
     @PostMapping
-    public Order createOrder(@RequestParam Long userId, @RequestParam Long productId) {
-        return orderService.createOrder(userId, productId);
+    public ResponseEntity<Long> createOrder(@RequestBody OrderRequest request) {
+        return orderService.createOrder(request);
     }
 }
