@@ -3,6 +3,8 @@ package com.project.payment_service.kafka;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.payment_service.model.OrderEvent;
 import com.project.payment_service.model.OrderStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -10,6 +12,7 @@ import org.springframework.stereotype.Service;
 public class PaymentProducer {
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final ObjectMapper objectMapper;
+    private static final Logger log = LoggerFactory.getLogger(PaymentProducer.class);
     public PaymentProducer(KafkaTemplate<String, String> kafkaTemplate, ObjectMapper objectMapper) {
         this.kafkaTemplate = kafkaTemplate; this.objectMapper = objectMapper;
     }
@@ -17,10 +20,11 @@ public class PaymentProducer {
         try {
             OrderEvent event = new OrderEvent(orderId, OrderStatus.PAYMENT_SUCCESS,correlationId);
             String json = objectMapper.writeValueAsString(event);
-            kafkaTemplate.send("payment-success", orderId, json); System.out.println("Sent: " + json);
+            kafkaTemplate.send("payment-success", orderId, json);
+            log.info("[{}] Sent payment-success event for orderId: {}", correlationId, orderId);
         }
         catch (Exception e) {
-            System.out.println("Failed to send payment-success event for order: " + orderId);
+            log.error("[{}] Failed to send payment-success event for orderId: {}", correlationId, orderId,e);
         }
     }
     public void sendPaymentFailed(String orderId,String correlationId) {
@@ -30,7 +34,7 @@ public class PaymentProducer {
             kafkaTemplate.send("payment-failed", orderId, json);
         }
         catch (Exception e) {
-            System.out.println("Failed to send payment-failed event for order: " + orderId);
+            log.error("[{}] Failed to send payment-failed event for orderId: {}", correlationId, orderId,e);
         }
     }
     public void sendRefundSuccess(String orderId,String correlationId) {
@@ -40,7 +44,7 @@ public class PaymentProducer {
             kafkaTemplate.send("refund-success", orderId, json);
         }
         catch (Exception e) {
-            System.out.println("Failed to send refund-success event for order: " + orderId);
+            log.error("[{}] Failed to send refund-success event for orderId: {}", correlationId, orderId,e);
         }
     }
 }

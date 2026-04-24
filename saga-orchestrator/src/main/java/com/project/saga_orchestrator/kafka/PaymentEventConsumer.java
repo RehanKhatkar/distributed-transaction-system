@@ -6,6 +6,8 @@ import com.project.saga_orchestrator.model.OrderEvent;
 import com.project.saga_orchestrator.model.OrderStatus;
 import com.project.saga_orchestrator.model.SagaState;
 import com.project.saga_orchestrator.repo.SagaRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 @Service
@@ -13,6 +15,7 @@ public class PaymentEventConsumer {
     private final SagaRepository sagaRepository;
     private final SagaProducer sagaProducer;
     private final ObjectMapper objectMapper;
+    private static final Logger log = LoggerFactory.getLogger(PaymentEventConsumer.class);
     public PaymentEventConsumer(SagaRepository sagaRepository, SagaProducer sagaProducer, ObjectMapper objectMapper) {
         this.sagaRepository = sagaRepository;
         this.sagaProducer = sagaProducer;
@@ -35,7 +38,7 @@ public class PaymentEventConsumer {
             state.setStatus(OrderStatus.PAYMENT_SUCCESS);
             sagaRepository.save(state);
             sagaProducer.sendEventJson("inventory-request", orderId, OrderStatus.INVENTORY_REQUEST,correlationId);
-            System.out.println("Payment success processed for: " + orderId);
+            log.info("[{}] Payment success processed for orderId: {}", correlationId, orderId);
         } catch (Exception e) {
             sagaProducer.sendEventJson("payment-success-dlq", orderId,OrderStatus.PAYMENT_SUCCESS_DLQ,correlationId);
         }
@@ -56,7 +59,7 @@ public class PaymentEventConsumer {
             }
             state.setStatus(OrderStatus.PAYMENT_FAILED);
             sagaRepository.save(state);
-            System.out.println("Order cancelled: " + orderId);
+            log.info("[{}] Order cancelled for orderId: {}", correlationId, orderId);
         } catch (Exception e) {
             sagaProducer.sendEventJson("payment-failed-dlq", orderId, OrderStatus.PAYMENT_FAILED_DLQ,correlationId);
         }
