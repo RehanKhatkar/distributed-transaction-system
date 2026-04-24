@@ -6,28 +6,37 @@ It ensures data consistency across multiple services without using traditional d
 
 ---
 
-## 🏗️ Architecture (Event Flow)
+```mermaid
+flowchart TD
 
-### Step 1: Order Creation
-Order Service → (order-created) → Saga Orchestrator
+%% Order creation
+A[Order Service] -->|order-created| B[Saga Orchestrator]
 
-### Step 2: Payment Processing
-Saga Orchestrator → (payment-request) → Payment Service  
-Payment Service → (payment-success / payment-failed) → Saga Orchestrator
+%% Payment step
+B -->|payment-request| C[Payment Service]
 
-### Step 3: Inventory Handling
-Saga Orchestrator → (inventory-request) → Inventory Service  
+C -->|payment-success| B
+C -->|payment-failed| B
 
-- If success:  
-  Inventory Service → (inventory-success) → Saga Orchestrator  
-  Saga Orchestrator → (order-completed) → Order Service  
+%% After payment success → inventory
+B -->|inventory-request| D[Inventory Service]
 
-- If failure:  
-  Inventory Service → (inventory-failed) → Saga Orchestrator  
-  Saga Orchestrator → (refund-request) → Payment Service  
-  Payment Service → (refund-success) → Saga Orchestrator  
-  Saga Orchestrator → (order-refunded) → Order Service
+%% Inventory success path
+D -->|inventory-success| B
+B -->|order-completed| A
 
+%% Inventory failure path → refund
+D -->|inventory-failed| B
+B -->|refund-request| C
+
+%% Refund flow
+C -->|refund-success| B
+B -->|order-refunded| A
+
+%% Optional: payment failure direct cancel (your diagram had this idea)
+C -->|payment-failed| E[Order Cancelled]
+E --> B
+```
 ---
 ## 🔄 Event Topics Used
 - order-created
