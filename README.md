@@ -38,7 +38,7 @@ C -->|payment-failed| E[Order Cancelled]
 E --> B
 ```
 ---
-## 🔄 Event Topics Used
+## Event Topics Used
 - order-created
 - payment-request
 - payment-success / payment-failed
@@ -49,7 +49,7 @@ E --> B
 - order-completed
 - order-refunded
 
-## 🔄 Flow
+## Flow
 
 1. User creates an order via Order Service
 2. Order Service publishes `order-created` event
@@ -65,7 +65,7 @@ E --> B
 
 ---
 
-## ⚙️ Tech Stack
+## Tech Stack
 
 - Java (Spring Boot)
 - Apache Kafka
@@ -74,7 +74,7 @@ E --> B
 
 ---
 
-## 🔥 Features
+## Features
 
 - Saga Orchestration Pattern
 - Event-driven architecture using Kafka
@@ -87,7 +87,7 @@ E --> B
 
 ---
 
-## 🚀 How to Run
+## How to Run
 
 ### 1. Clone repository
 
@@ -121,7 +121,7 @@ Body:
   "productId": 101
   }
 ```
-## 📊 Example Flow (Logs)
+## Example Flow (Logs)
 ```bash
 [abc-123] Order created
 [abc-123] Payment success
@@ -129,17 +129,17 @@ Body:
 [abc-123] Refund success
 [abc-123] Order refunded
 ```
-## 🧠 Key Concepts
+## Key Concepts
 - Saga Pattern: Manages distributed transactions using events
 - Event-driven architecture: Services communicate via Kafka
 - Compensation: Undo operations when failures occur
 - Correlation ID: Tracks a request across multiple services
 
-## 📌 Future Improvements
+## Future Improvements
 - Shared event module across services
 - Retry mechanisms with backoff
 - Monitoring (Prometheus + Grafana)
 - API Gateway integration
 
-## 👨‍💻 Author
+## Author
 Rehan Khatkar
